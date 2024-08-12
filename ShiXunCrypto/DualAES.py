@@ -60,7 +60,7 @@ class DualAES():
     
     def decrypt(self, cipher_text: bytes) -> str:
         # 沒有私鑰不能解密
-        if self.pk == None:
+        if self.__sk == None:
             error_message = 'Without private key in objects.'
             raise ValueError(error_message)
         
@@ -72,8 +72,20 @@ class DualAES():
         key = DR_obj.decrypt(enc_key)
 
         # 用AES key把data解密
-        AES_obj = AESCrypto(key)
-
+        AES_obj = AESCrypto()
+        AES_obj.key = key
+        AES_obj.gen_round_key()
         data = AES_obj.decrypt(enc_data)
 
         return data.decode()
+    
+
+    def import_key(self, key: bytes) -> None:
+        _data = key.split(b'\n')
+        if _data[0] == b'-----BEGIN DUAL REGEV PUBLIC KEY-----':
+            self.pk = key
+        elif _data[0] == b'-----BEGIN DUAL REGEV PRIVATE KEY-----':
+            self.__sk = key
+        else:
+            error_message = 'Invalid key input.'
+            raise ValueError(error_message)
